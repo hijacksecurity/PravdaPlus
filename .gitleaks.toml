@@ -1,0 +1,112 @@
+# Gitleaks configuration for PravdaPlus
+
+title = "PravdaPlus Security Configuration"
+
+# Default rules - covers common patterns
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{32,}'''
+keywords = ["openai", "sk-"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-api03-[a-zA-Z0-9\-_]{90,}'''
+keywords = ["anthropic", "sk-ant"]
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret"
+regex = '''(?i)(jwt_secret|jwt_key|secret_key)['"\s]*[:=]\s*['"][^'"]{32,}['"]'''
+keywords = ["jwt_secret", "jwt_key", "secret_key"]
+
+[[rules]]
+id = "database-password"
+description = "Database Password"
+regex = '''(?i)(password|passwd|pwd)['"\s]*[:=]\s*['"][^'"]{8,}['"]'''
+keywords = ["password", "passwd", "pwd"]
+
+[[rules]]
+id = "api-key-generic"
+description = "Generic API Key"
+regex = '''(?i)(api_key|api-key|apikey)['"\s]*[:=]\s*['"][a-zA-Z0-9]{20,}['"]'''
+keywords = ["api_key", "api-key", "apikey"]
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''AKIA[0-9A-Z]{16}'''
+keywords = ["aws", "AKIA"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Key"
+regex = '''[A-Za-z0-9/+=]{40}'''
+keywords = ["aws", "secret"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN [A-Z ]+PRIVATE KEY-----'''
+keywords = ["private", "key", "BEGIN"]
+
+[[rules]]
+id = "ssh-key"
+description = "SSH Key"
+regex = '''ssh-rsa [A-Za-z0-9+/=]{200,}'''
+keywords = ["ssh-rsa"]
+
+[[rules]]
+id = "google-oauth"
+description = "Google OAuth"
+regex = '''[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com'''
+keywords = ["googleusercontent"]
+
+[[rules]]
+id = "slack-token"
+description = "Slack Token"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
+keywords = ["slack", "xox"]
+
+[[rules]]
+id = "github-token"
+description = "GitHub Token"
+regex = '''gh[pousr]_[A-Za-z0-9_]{36}'''
+keywords = ["github", "ghp_", "gho_", "ghu_", "ghs_", "ghr_"]
+
+# File allowlist - files to skip scanning
+[allowlist]
+commits = []
+paths = [
+    '''\.env\.example$''',
+    '''\.env\.template$''',
+    '''README\.md$''',
+    '''\.gitignore$''',
+    '''\.gitleaks\.toml$''',
+]
+
+# Keywords that when found will cause gitleaks to stop and report
+stopwords = [
+    "password",
+    "secret",
+    "key", 
+    "token",
+    "api_key",
+    "private_key",
+    "sk-",
+    "AKIA",
+]
+
+# Custom entropy thresholds for different file types
+[entropy]
+min = 3.5
+max = 8.0
+groups = ["base64", "hex"]
+
+# Additional regex patterns for entropy detection
+[entropy.group.base64]
+pattern = "[A-Za-z0-9+/=]{20,}"
+
+[entropy.group.hex]
+pattern = "[0-9a-fA-F]{16,}"

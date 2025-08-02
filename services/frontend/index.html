@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PravdaPlus - Satirical News</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .article { border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 20px; background: white; }
+        .title { font-size: 1.4rem; margin-bottom: 12px; color: #1f2937; cursor: pointer; }
+        .description { color: #4b5563; margin-bottom: 20px; line-height: 1.6; }
+        .loading { text-align: center; color: #f59e0b; font-style: italic; }
+        .category { text-transform: capitalize; font-size: 1.8rem; margin-bottom: 20px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+        .source { font-size: 0.85rem; color: #6b7280; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="color: #2563eb; font-size: 3rem; margin-bottom: 10px;">PravdaPlus</h1>
+        <p style="font-size: 1.2rem; color: #666;">News Worth Reading</p>
+    </div>
+    
+    <div id="news-container">
+        <div class="loading">Loading news...</div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        async function fetchNews() {
+            try {
+                const response = await fetch(`${API_URL}/news?limit=3`);
+                const data = await response.json();
+                displayNews(data);
+            } catch (error) {
+                document.getElementById('news-container').innerHTML = '<p style="color: red; text-align: center;">Failed to load news. API might be down.</p>';
+            }
+        }
+        
+        async function transformArticle(article) {
+            try {
+                const response = await fetch(`${API_URL}/transform`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ article, style: 'satirical' })
+                });
+                return await response.json();
+            } catch (error) {
+                return null;
+            }
+        }
+        
+        function displayNews(newsData) {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            Object.entries(newsData).forEach(([category, articles]) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.innerHTML = `<h2 class="category">${category}</h2>`;
+                container.appendChild(categoryDiv);
+                
+                articles.forEach(async (article) => {
+                    const articleDiv = document.createElement('div');
+                    articleDiv.className = 'article';
+                    articleDiv.innerHTML = `
+                        <div class="loading">Transforming this story...</div>
+                    `;
+                    container.appendChild(articleDiv);
+                    
+                    // Transform article
+                    const transformed = await transformArticle(article);
+                    if (transformed) {
+                        articleDiv.innerHTML = `
+                            <h3 class="title" onclick="window.location.href='${article.link}'">${transformed.transformed.title}</h3>
+                            <p class="description">${transformed.transformed.description}</p>
+                            <div class="source">
+                                📰 Based on: <a href="${article.link}" target="_blank" style="color: #3b82f6; text-decoration: none;">${article.title}</a>
+                            </div>
+                        `;
+                    } else {
+                        articleDiv.innerHTML = `
+                            <h3 class="title" onclick="window.location.href='${article.link}'">${article.title}</h3>
+                            <p class="description">${article.description}</p>
+                            <div class="source">
+                                📰 Source: <a href="${article.link}" target="_blank" style="color: #3b82f6; text-decoration: none;">BBC News</a>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
+        
+        // Load news on page load
+        fetchNews();
+    </script>
+</body>
+</html>

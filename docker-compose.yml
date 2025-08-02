@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./services/api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+
+  frontend:
+    build: ./services/frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  transformer:
+    build: ./services/transformer
+    ports:
+      - "8002:8002"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
