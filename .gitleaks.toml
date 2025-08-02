@@ -42,8 +42,8 @@ keywords = ["aws", "AKIA"]
 [[rules]]
 id = "aws-secret-key"
 description = "AWS Secret Key"
-regex = '''[A-Za-z0-9/+=]{40}'''
-keywords = ["aws", "secret"]
+regex = '''(?i)aws.*[A-Za-z0-9/+=]{40}'''
+keywords = ["aws"]
 
 [[rules]]
 id = "private-key"
@@ -82,6 +82,7 @@ paths = [
     '''\.env\.example$''',
     '''\.env\.template$''',
     '''README\.md$''',
+    '''SECURITY\.md$''',
     '''\.gitignore$''',
     '''\.gitleaks\.toml$''',
 ]
