@@ -49,17 +49,43 @@ spec:
       labels:
         app: postgres
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10002
+        runAsGroup: 10002
+        fsGroup: 10002
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: postgres
         image: postgres:15
         envFrom:
         - secretRef:
             name: database-secret
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10002
+          runAsGroup: 10002
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
         ports:
         - containerPort: 5432
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        - name: tmp
+          mountPath: /tmp
+        - name: run
+          mountPath: /var/run/postgresql
         resources:
           requests:
             memory: "256Mi"
@@ -69,6 +95,10 @@ spec:
             cpu: "500m"
       volumes:
       - name: postgres-storage
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+      - name: run
         emptyDir: {}
 
 ---
@@ -102,11 +132,33 @@ spec:
       labels:
         app: redis
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10003
+        runAsGroup: 10003
+        fsGroup: 10003
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: redis
         image: redis:7-alpine
         ports:
         - containerPort: 6379
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10003
+          runAsGroup: 10003
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: data
+          mountPath: /data
         resources:
           requests:
             memory: "64Mi"
@@ -114,6 +166,9 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "100m"
+      volumes:
+      - name: data
+        emptyDir: {}
 
 ---
 # Redis Service
@@ -146,12 +201,34 @@ spec:
       labels:
         app: api
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: api
-        image: pravda-api:latest
+        image: pravda-api:1.0.0
         imagePullPolicy: Never
         ports:
         - containerPort: 8000
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10001
+          runAsGroup: 10001
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: ENVIRONMENT
           value: "test"
@@ -176,6 +253,9 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+      volumes:
+      - name: tmp
+        emptyDir: {}
 
 ---
 # API Service
@@ -208,25 +288,47 @@ spec:
       labels:
         app: frontend
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10004
+        runAsGroup: 10004
+        fsGroup: 10004
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: frontend
-        image: pravda-frontend:latest
+        image: pravda-frontend:1.0.0
         imagePullPolicy: Never
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10004
+          runAsGroup: 10004
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: API_URL
           value: "http://api-service:8000"
         livenessProbe:
           httpGet:
             path: /
-            port: 80
+            port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 80
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 5
         resources:
@@ -236,6 +338,9 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+      volumes:
+      - name: tmp
+        emptyDir: {}
 
 ---
 # Frontend Service
@@ -249,7 +354,7 @@ spec:
     app: frontend
   ports:
   - port: 3000
-    targetPort: 80
+    targetPort: 8080
 
 ---
 # Transformer Deployment
@@ -268,12 +373,34 @@ spec:
       labels:
         app: transformer
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10005
+        runAsGroup: 10005
+        fsGroup: 10005
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: transformer
-        image: pravda-transformer:latest
+        image: pravda-transformer:1.0.0
         imagePullPolicy: Never
         ports:
         - containerPort: 8002
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10005
+          runAsGroup: 10005
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: OPENAI_API_KEY
           valueFrom:
@@ -299,6 +426,9 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+      volumes:
+      - name: tmp
+        emptyDir: {}
 
 ---
 # Transformer Service
