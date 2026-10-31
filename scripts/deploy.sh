@@ -10,9 +10,9 @@ echo "🚀 Deploying PravdaPlus..."
 echo "📦 Building Docker images..."
 cd "$(dirname "$0")/.."
 
-docker build -t pravda-api:latest ./services/api
-docker build -t pravda-frontend:latest ./services/frontend  
-docker build -t pravda-transformer:latest ./services/transformer
+docker build -t pravda-api:1.0.0 ./services/api
+docker build -t pravda-frontend:1.0.0 ./services/frontend  
+docker build -t pravda-transformer:1.0.0 ./services/transformer
 
 echo "☸️  Deploying to Kubernetes..."
 kubectl apply -f k8s/deployment.yaml
